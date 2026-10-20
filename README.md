@@ -10,10 +10,10 @@ new client project and adapted through **one project profile file** instead of c
 
 ```bash
 npm ci
-npx playwright install --with-deps chromium
+npm run install:browsers      # chromium + firefox
 cp .env.example .env          # fill in admin API credentials (see below)
-npm run test:smoke            # ~45 critical tests, chromium
-npm test                      # full suite: chromium + mobile (Pixel 7)
+npm run test:smoke            # critical tests: chromium + firefox + mobile
+npm test                      # full suite: chromium + firefox + mobile (Pixel 7)
 npm run report                # open HTML report
 ```
 
@@ -22,7 +22,8 @@ Useful variants:
 ```bash
 npx playwright test tests/storefront/cart.spec.ts --headed
 npx playwright test --grep @mobile --project=mobile
-EXTRA_BROWSERS=firefox,webkit npm test
+EXTRA_BROWSERS=webkit npm test     # needs: npx playwright install webkit
+PW_CHANNEL=chrome npm test         # use installed Chrome instead of Playwright's Chromium
 ALLOW_WRITE_TESTS=false npm test   # production-safe: no customers, orders or form submissions
 npm run test:ui                    # Playwright UI mode for debugging
 ```
@@ -32,7 +33,7 @@ npm run test:ui                    # Playwright UI mode for debugging
 ## Architecture
 
 ```
-├── playwright.config.ts        # projects: setup → chromium/[firefox/webkit]/mobile → cleanup
+├── playwright.config.ts        # projects: setup → chromium/firefox/[webkit]/mobile → cleanup
 ├── .env.example                # secrets & environment switches (never commit .env)
 ├── projects/                   # ★ one profile per shop — the ONLY file you normally edit
 │   ├── demo.ts                 #   demo shop
@@ -183,3 +184,22 @@ Both use the official `mcr.microsoft.com/playwright` image (keep its version in 
 - Country list contains only Germany. Registration has no birthday / password confirmation.
 - 6.7 renders category flyouts as Bootstrap dropdowns: clicking a root category opens the flyout;
   `MainNavigation.openCategory()` handles both behaviours.
+- Product pages are served without a session cookie and fire several XHRs in parallel on load,
+  each creating its own session — the first add-to-cart can land in a discarded session. The
+  `context` fixture starts the session up front to avoid this (also affects real first visits).
+- `simpleProduct` (Canvas Tote Bag) has no delivery time configured → the delivery-info block
+  renders empty, so the PDP test only checks it is attached.
+
+---
+
+## Troubleshooting
+
+- **Browser download fails** (`EPROTO` / connection reset to `cdn.playwright.dev`, e.g. behind a
+  corporate filter): Firefox/WebKit can be fetched from Microsoft's mirror —
+  `PLAYWRIGHT_DOWNLOAD_HOST=https://playwright.download.prss.microsoft.com/dbazure/download/playwright npx playwright install firefox webkit`.
+  Chromium is not on that mirror; set `PW_CHANNEL=chrome` (or `msedge`) in `.env` to use the
+  installed browser instead.
+- **WebKit on Windows** reports missing `msvcp140_1.dll` → install the
+  [Microsoft Visual C++ Redistributable](https://aka.ms/vs/17/release/vc_redist.x64.exe).
+- **`EAI_AGAIN` / `ERR_NAME_NOT_RESOLVED` / `NS_ERROR_UNKNOWN_HOST`**: DNS could not resolve
+  the shop — a network issue, not a test failure. Rerun once the host resolves again.

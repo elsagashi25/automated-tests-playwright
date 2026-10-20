@@ -11,7 +11,8 @@ test.describe('Product detail page', () => {
     await expect(product.buyButton).toBeEnabled();
     await expect(product.page.locator(s.gallery).first()).toBeVisible();
     await expect(product.page.locator(s.tax).first()).toBeVisible();
-    await expect(product.page.locator(s.delivery).first()).toBeVisible();
+    // Rendered empty (→ hidden) when the product has no delivery time configured
+    await expect(product.page.locator(s.delivery).first()).toBeAttached();
     await expect(product.page.locator(s.description).first()).toBeAttached();
   });
 

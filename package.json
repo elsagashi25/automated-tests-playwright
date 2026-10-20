@@ -14,7 +14,7 @@
     "test:list": "playwright test --list",
     "report": "playwright show-report",
     "typecheck": "tsc --noEmit",
-    "install:browsers": "playwright install --with-deps chromium"
+    "install:browsers": "playwright install --with-deps chromium firefox"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",

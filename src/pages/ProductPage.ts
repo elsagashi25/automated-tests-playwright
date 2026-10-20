@@ -33,11 +33,13 @@ export class ProductPage extends BasePage {
   }
 
   async setQuantity(qty: number): Promise<void> {
+    await this.waitForPlugin(this.quantity.locator('xpath=ancestor::*[@data-quantity-selector][1]'), 'QuantitySelector');
     await this.quantity.fill(String(qty));
   }
 
   async addToCart(qty?: number): Promise<void> {
     if (qty) await this.setQuantity(qty);
+    await this.waitForPlugin(this.buyButton.locator('xpath=ancestor::form[1]'), 'AddToCart');
     await this.waitForXhr('/checkout/offcanvas', () => this.buyButton.click());
   }
 

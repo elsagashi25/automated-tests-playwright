@@ -25,15 +25,7 @@ export class OffcanvasCart extends BasePage {
     await expect(this.root).not.toHaveClass(/showing/);
     const selector = this.lineItem(name).locator('[data-quantity-selector]').first();
     await expect(selector).toBeVisible();
-    await selector.evaluate((el) =>
-      new Promise<void>((resolve) => {
-        const check = () =>
-          (window as any).PluginManager?.getPluginInstanceFromElement(el, 'QuantitySelector')
-            ? resolve()
-            : requestAnimationFrame(check);
-        check();
-      }),
-    );
+    await this.waitForPlugin(selector, 'QuantitySelector');
   }
 
   async increaseQuantity(name: string): Promise<void> {

@@ -1,6 +1,6 @@
 import { test as base, expect, type Page } from '@playwright/test';
 import { loadConfig, hasAdminCredentials } from '../config/loader';
-import type { ResolvedConfig } from '../config/types';
+import type { ProductRef, ResolvedConfig } from '../config/types';
 import { AdminApiClient } from '../api/AdminApiClient';
 import { StoreApiClient } from '../api/StoreApiClient';
 import { buildCustomer, type TestCustomer } from '../data/customer';
@@ -24,8 +24,18 @@ export class CartHelper {
     private readonly storeApi: StoreApiClient | null,
   ) {}
 
-  /** Adds a product by product number. Falls back to the UI (PDP) if Store API is unavailable. */
+  /**
+   * Adds a product by product number. Falls back to the UI (PDP) if Store API is unavailable.
+   * Verifies the line item really is in the session's cart, so a lost add fails here
+   * instead of surfacing later as an unexpected redirect (e.g. confirm → cart).
+   */
   async add(product = this.cfg.testData.simpleProduct, quantity = 1): Promise<void> {
+    await this.addToSession(product, quantity);
+    const cart = await (await this.page.request.get('/checkout/offcanvas')).text();
+    expect(cart.includes(product.name), `"${product.name}" missing from cart after add`).toBeTruthy();
+  }
+
+  private async addToSession(product: ProductRef, quantity: number): Promise<void> {
     if (!this.storeApi) {
       const pdp = new ProductPage(this.page, this.cfg);
       await pdp.open(product);
@@ -108,6 +118,10 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
 
   context: async ({ context, cfg, acceptCookies }, use) => {
     if (acceptCookies && cfg.features.cookieBanner) await CookieBanner.preAccept(context, cfg.baseURL);
+    // Start the storefront session up front. Cached pages arrive without a session cookie and
+    // fire several XHRs in parallel on load, each creating its own session — the browser keeps
+    // whichever Set-Cookie lands last, so the first add-to-cart can end up in a discarded session.
+    await context.request.get('/widgets/checkout/info');
     await use(context);
   },
 
