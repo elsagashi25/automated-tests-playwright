@@ -26,6 +26,7 @@ jobs:
       CI: 'true'
       PROJECT: ${{ vars.PROJECT || 'demo' }}
       BASE_URL: ${{ vars.BASE_URL }}
+      BASE_URL_DEMOSHOP: ${{ vars.BASE_URL_DEMOSHOP }}
       HTTP_USERNAME: ${{ secrets.HTTP_USERNAME }}
       HTTP_PASSWORD: ${{ secrets.HTTP_PASSWORD }}
       ADMIN_CLIENT_ID: ${{ secrets.ADMIN_CLIENT_ID }}
