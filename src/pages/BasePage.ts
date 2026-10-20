@@ -44,6 +44,25 @@ export abstract class BasePage {
     await expect(this.page).toHaveURL(re);
   }
 
+  /**
+   * Waits until Shopware's PluginManager has bound `plugin` to `target`. Plugins load
+   * asynchronously and may bind after `load` (notably in Firefox) — interacting earlier
+   * falls back to native behaviour (e.g. a full form submit instead of an AJAX call).
+   */
+  async waitForPlugin(target: Locator, plugin: string): Promise<void> {
+    await target.evaluate(
+      (el, name) =>
+        new Promise<void>((resolve) => {
+          const check = () =>
+            (window as any).PluginManager?.getPluginInstanceFromElement(el, name)
+              ? resolve()
+              : requestAnimationFrame(check);
+          check();
+        }),
+      plugin,
+    );
+  }
+
   /** Waits for the Shopware AJAX call triggered by `action` (listing, offcanvas, cart …). */
   async waitForXhr(urlPart: string | RegExp, action: () => Promise<unknown>): Promise<Response> {
     const matcher = (r: Response) =>

@@ -131,7 +131,9 @@ export class ListingPage extends BasePage {
   async addToCartFromListing(index = 0): Promise<string> {
     const box = this.productBoxes.nth(index);
     const name = (await box.locator(this.s.listing.productName).innerText()).trim();
-    await this.waitForXhr('/checkout/offcanvas', () => box.locator(this.s.listing.buyButton).click());
+    const button = box.locator(this.s.listing.buyButton);
+    await this.waitForPlugin(button.locator('xpath=ancestor::form[1]'), 'AddToCart');
+    await this.waitForXhr('/checkout/offcanvas', () => button.click());
     return name;
   }
 

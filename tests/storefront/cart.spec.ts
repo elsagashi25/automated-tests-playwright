@@ -85,7 +85,7 @@ test.describe('Cart', () => {
 
   test('valid promotion code reduces total', async ({ cart, cartHelper, cfg }) => {
     const code = cfg.testData.promotionCode;
-    test.skip(!cfg.features.promotionCodes || !code, 'No promotion code configured');
+    expect(code, 'No promotion code configured in project profile (testData.promotionCode)').toBeTruthy();
     await cartHelper.add(cfg.testData.simpleProduct, 1);
     await cart.open();
     const before = await cart.totalValue();

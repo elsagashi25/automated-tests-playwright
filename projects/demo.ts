@@ -1,4 +1,5 @@
 import type { ProjectConfig } from '../src/config/types';
+import { requireEnv } from '@src/config/env';
 
 /**
  * Project profile: solution25 Shopware 6.7 demo shop.
@@ -9,7 +10,7 @@ import type { ProjectConfig } from '../src/config/types';
  */
 const config: ProjectConfig = {
   name: 'Shopware Demo (automated-testing)',
-  baseURL: 'https://automated-testing.development-s25.com',
+  baseURL: requireEnv('BASE_URL_DEMOSHOP'),
   locale: 'de-DE',
   currencySymbol: '€',
 
@@ -83,7 +84,7 @@ const config: ProjectConfig = {
     contactLinkText: /Kontakt|Contact/i,
     paymentMethod: null,
     shippingMethod: null,
-    promotionCode: null,
+    promotionCode: 'K9X2L2H4',
   },
 
   redirects: [
